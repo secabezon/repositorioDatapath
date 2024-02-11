@@ -22,12 +22,7 @@ def cargar_archivo(archivo):
   dataframe=pandas.read_csv(archivo)
   return dataframe
 
-df_test=cargar_archivo('test.csv')
 df_train=cargar_archivo('train.csv')
-
-#df_sample=cargar_archivo('sample_submission.csv')
-
-#df_test=df_test.merge(df_sample,how='inner',on='PassengerId')
 
 def validación_balanceo(dataframe):
   columnas=['HomePlanet','CryoSleep','Destination','VIP','Transported']
@@ -53,21 +48,20 @@ visualizacion(df_train_clean)
 
 def separated_train_validate(dataframe):
   train_dataframe = dataframe.sample(frac=0.8, random_state=0)
-  validate_dataframe = dataframe.drop(train_dataframe.index)
-  return train_dataframe,validate_dataframe
+  test_dataframe = dataframe.drop(train_dataframe.index)
+  validate_dataframe = train_dataframe.sample(frac=0.2, random_state=0)
+  train_dataframe = train_dataframe.drop(validate_dataframe.index)
+  return train_dataframe,validate_dataframe,test_dataframe
 
-train_dataframe,validate_dataframe=separated_train_validate(df_train_clean)
+train_dataframe,validate_dataframe,test_dataframe=separated_train_validate(df_train_clean)
 
 train_features = train_dataframe.copy()
 validate_features = validate_dataframe.copy()
-#test_features = df_test.copy()
+test_features = test_dataframe.copy()
 
 train_labels = train_features.pop('Transported')
 validate_labels = validate_features.pop('Transported')
-#test_labels = test_features.pop('Transported')
-
-#train_features = train_dataframe[['Age','RoomService','FoodCourt','ShoppingMall','Spa','VRDeck','TRAPPIST-1e','PSO J318.5-22','55 Cancri e']]
-#validate_features = validate_dataframe[['Age','RoomService','FoodCourt','ShoppingMall','Spa','VRDeck','TRAPPIST-1e','PSO J318.5-22','55 Cancri e']]
+test_labels = test_features.pop('Transported')
 
 columns=['Age','RoomService','FoodCourt','ShoppingMall','Spa','VRDeck','TRAPPIST-1e','PSO J318.5-22','55 Cancri e']
 
@@ -76,16 +70,13 @@ train_features = train_features[columns]
 escalar = StandardScaler()
 train_features = escalar.fit_transform(train_features)  ## Encontrar la media y varianza
 validate_features = escalar.transform(validate_features[columns])
+test_features = escalar.transform(test_features[columns])
 
 model = LogisticRegression()
 
 model.fit(train_features, train_labels)
 
 validate_pred = model.predict(validate_features)
-
-#Verifico la matriz de Confusión
-print(validate_features.shape)
-print(validate_labels.shape)
 
 matriz = confusion_matrix(validate_labels, validate_pred)
 print('Matriz de Confusión:')
@@ -96,6 +87,20 @@ print('Precisión del modelo:')
 print(precision)
 
 exactitud = accuracy_score(validate_labels, validate_pred)
+print('Exactitud del modelo:')
+print(exactitud)
+
+test_pred = model.predict(test_features)
+
+matriz = confusion_matrix(test_labels, test_pred)
+print('Matriz de Confusión:')
+print(matriz)
+
+precision = precision_score(test_labels, test_pred)
+print('Precisión del modelo:')
+print(precision)
+
+exactitud = accuracy_score(test_labels, test_pred)
 print('Exactitud del modelo:')
 print(exactitud)
 
