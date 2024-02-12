@@ -35,7 +35,7 @@ def viz_nan(dataframe):
   missingno.matrix(dataframe)
   print('Los nulos por columna son:')
   print(dataframe.isnull().sum())
-  dataframe=dataframe.dropna(subset=['Age','RoomService','FoodCourt','ShoppingMall','Spa','VRDeck'])
+  dataframe=dataframe.dropna(subset=['Age','Destination','RoomService','FoodCourt','ShoppingMall','Spa','VRDeck'])
   return dataframe
 df_train_clean=viz_nan(df_train)
 
@@ -72,7 +72,7 @@ train_features = escalar.fit_transform(train_features)  ## Encontrar la media y 
 validate_features = escalar.transform(validate_features[columns])
 test_features = escalar.transform(test_features[columns])
 
-model = LogisticRegression()
+model = LogisticRegression(max_iter=60)
 
 model.fit(train_features, train_labels)
 
@@ -103,6 +103,14 @@ print(precision)
 exactitud = accuracy_score(test_labels, test_pred)
 print('Exactitud del modelo:')
 print(exactitud)
+
+df_test_example_predict=cargar_archivo('test.csv')
+df_test_example_predict=df_test_example_predict.dropna(subset=['Age','Destination','RoomService','FoodCourt','ShoppingMall','Spa','VRDeck'])
+df_test_example_predict = pandas.get_dummies(df_test_example_predict, columns=['Destination'], prefix='', prefix_sep='')
+test_example_predict = escalar.transform(df_test_example_predict[columns])
+
+test_example_pred = model.predict(test_example_predict)
+print(test_example_pred)
 
 import pickle
 with open('modelo_regresion_logistica.pkl', 'wb') as file:
